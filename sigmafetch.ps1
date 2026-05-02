@@ -297,13 +297,6 @@ public class Display {
     }
 }
 
-# IP / Country
-$step++; Show-Progress "IP & Country..." $step $totalSteps
-$ipCountry = "Unknown"
-try {
-    $ipData = Invoke-RestMethod -Uri "http://ip-api.com/json/?fields=country" -TimeoutSec 4 -ErrorAction Stop
-    if ($ipData.country) { $ipCountry = $ipData.country }
-} catch {}
 
 # Done
 $step++; Show-Progress "Done" $totalSteps $totalSteps
@@ -325,7 +318,6 @@ $infoLines = @(
     @{ label = "Streak";     value = $streakString;              color = $white  }
     @{ label = "Install";    value = "$installedCount programs"; color = $white  }
     @{ label = "Runs";       value = "$processCount processes";  color = $white  }
-    @{ label = "IP";         value = $ipCountry;                 color = $white  }
     @{ label = "[Hardware]"; value = $null;                      color = $yellow }
     @{ label = "CPU";        value = $cpuString;                 color = $white  }
     @{ label = "MEM";        value = $ramString;                 color = $white  }
