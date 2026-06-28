@@ -196,16 +196,37 @@ $cpuString = "$cpuName ($cpuFreqStr / $cpuCores cores)"
 
 # RAM
 $step++; Show-Progress "RAM..." $step $totalSteps
-$ramTotal   = [math]::Round($osInfo.TotalVisibleMemorySize / 1MB, 0)
-$ramFree    = [math]::Round($osInfo.FreePhysicalMemory / 1MB, 0)
-$ramUsedPct = [int](($ramTotal - $ramFree) / $ramTotal * 100)
-$ramGB      = [math]::Round($ramTotal, 0)
-$memType    = 0
+$ramFreeKB  = $osInfo.FreePhysicalMemory
+$ramTotalKB = $osInfo.TotalVisibleMemorySize
+
+# Физическая ёмкость — сумма планок
+$physicalRAMBytes = 0
+try {
+    $dimms = Get-CimInstance Win32_PhysicalMemory
+    foreach ($d in $dimms) { $physicalRAMBytes += $d.Capacity }
+} catch {}
+
+if ($physicalRAMBytes -gt 0) {
+    $ramGB = [math]::Round($physicalRAMBytes / 1GB, 0)
+} else {
+    # фолбек — округляем TotalVisibleMemorySize до ближайшей степени двойки
+    $ramGB = [math]::Pow(2, [math]::Ceiling([math]::Log($ramTotalKB / 1MB, 2)))
+    $ramGB = [int]$ramGB
+}
+
+$ramUsedPct = [int](($ramTotalKB - $ramFreeKB) / $ramTotalKB * 100)
+
+$memType = 0
 try { $memType = (Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1).SMBIOSMemoryType } catch {}
 $ddrType = switch ($memType) {
     20 { "DDR" }; 21 { "DDR2" }; 24 { "DDR3" }; 26 { "DDR4" }; 34 { "DDR5" }; default { "DDR" }
 }
 $ramString = "${ramGB}GB $ddrType ($ramUsedPct%)"
+
+
+
+
+
 
 # GPU
 $step++; Show-Progress "GPU..." $step $totalSteps
